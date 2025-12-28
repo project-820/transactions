@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: transactions-service
+  namespace: project820
+  labels:
+    app: transactions-service
+    project: project820
+spec:
+  type: ClusterIP
+  selector:
+    app: transactions-service
+  ports:
+    # - name: http
+    #   protocol: TCP
+    #   port: 80 # Порт сетевого балансировщика, на котором будут обслуживаться пользовательские запросы.
+    #   targetPort: 8080 # Порт контейнера, на котором доступно приложение.
+    - name: grpc
+      protocol: TCP
+      port: 8082 # Порт сетевого балансировщика, на котором будут обслуживаться пользовательские запросы.
+      targetPort: 8082 # Порт контейнера, на котором доступно приложение.

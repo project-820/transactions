@@ -1,0 +1,26 @@
+version: v2
+
+managed:
+  enabled: true
+  disable:
+    - path: vendor.protobuf
+
+plugins:
+  - local: protoc-gen-go
+    out: ./pkg
+    opt:
+      - paths=source_relative
+
+  - local: protoc-gen-go-grpc
+    out: ./pkg
+    opt:
+      - paths=source_relative
+
+  - local: protoc-gen-openapiv2
+    out: ./pkg/swagger
+    strategy: all
+    opt:
+      - generate_unbound_methods=true
+      - logtostderr=true
+      - allow_merge=true
+      - merge_file_name=swagger

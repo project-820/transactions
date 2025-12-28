@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package auth;
+option go_package = "github.com/project-820/transactions/proto/api";
+
+service TransactionsService {
+  rpc Hello(HelloRequest) returns (HelloResponse);
+}
+
+message HelloRequest {
+  string data = 1;
+}
+
+message HelloResponse {
+  string data = 1;
+}
