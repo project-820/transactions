@@ -3,7 +3,7 @@ package postgres
 import (
 	"context"
 
-	"github.com/project-820/transactions/internal/services/ports"
+	"github.com/project-820/transactions/internal/core/ports"
 	"github.com/uptrace/bun"
 )
 

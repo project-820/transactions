@@ -4,8 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/project-820/transactions/internal/services/entity"
-	"github.com/project-820/transactions/internal/services/ports"
+	"github.com/project-820/transactions/internal/core/ports"
 
 	"github.com/uptrace/bun"
 )
@@ -22,7 +21,7 @@ func NewOutboxRepository(db bun.IDB) *outboxRepository {
 	}
 }
 
-func (r *outboxRepository) AddMessages(ctx context.Context, msgs []entity.OutboxMessage) error {
+func (r *outboxRepository) AddMessages(ctx context.Context, msgs []ports.OutboxMessage) error {
 	_, err := r.db.NewInsert().
 		Model(&msgs).
 		Exec(ctx)

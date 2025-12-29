@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/project-820/transactions/internal/adapters/in/eventloop"
 	"github.com/project-820/transactions/internal/platform"
 	"github.com/project-820/transactions/internal/platform/bootstrap"
 	"github.com/project-820/transactions/internal/platform/infra"
@@ -32,7 +33,9 @@ func Run(ctx context.Context) error {
 		return fmt.Errorf("failed to run platform: %w", err)
 	}
 
-	// go walletEventsConsumer.Run(ctx)
+	eventLoop := eventloop.NewEventLoop()
+	go eventLoop.Run(ctx)
+
 	// go syncLoop.Run(ctx)
 
 	<-ctx.Done()
