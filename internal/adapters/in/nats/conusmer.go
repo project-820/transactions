@@ -16,7 +16,7 @@ func NewConsumer() broker.Consumer {
 }
 
 func (c *jsConsumer) Next(ctx context.Context) (broker.Message, error) {
-	return nil, nil
+	return &message{}, nil
 }
 
 func (c *jsConsumer) Close() error {

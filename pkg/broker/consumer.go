@@ -1,6 +1,9 @@
 package broker
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 type Consumer interface {
 	Next(ctx context.Context) (Message, error)
@@ -8,9 +11,12 @@ type Consumer interface {
 }
 
 type Message interface {
-	Data() []byte
+	EventType() string
+	Payload() []byte
+	ID() string
+	Key() string
+	OccurredAt() time.Time
 
 	Ack(ctx context.Context) error
-
 	Nack(ctx context.Context, reason error) error
 }

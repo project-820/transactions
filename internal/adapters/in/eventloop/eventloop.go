@@ -2,6 +2,7 @@ package eventloop
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
 	"github.com/project-820/transactions/internal/core/transactions"
@@ -15,14 +16,10 @@ type EventLoop struct {
 	consumer            broker.Consumer
 
 	log *slog.Logger
-
-	stopCh chan struct{}
 }
 
 func NewEventLoop() EventLoop {
-	return EventLoop{
-		stopCh: make(chan struct{}),
-	}
+	return EventLoop{}
 }
 
 func (l *EventLoop) Run(ctx context.Context) {
@@ -30,8 +27,6 @@ func (l *EventLoop) Run(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			l.log.Error("context", "reason", ctx.Err())
-			return
-		case <-l.stopCh:
 			return
 		default:
 		}
@@ -45,18 +40,35 @@ func (l *EventLoop) Run(ctx context.Context) {
 		if err := l.workerPool.TaskAdd(
 			ctx,
 			workerpool.Task{
-				F: func(ctx context.Context, msg any) error {
-					wallet := msg.(transactions.Wallet)
-					return l.walletUpdateUsecase.Update(ctx, wallet)
+				F: func(ctx context.Context, data any) error {
+					bytes := data.([]byte)
+					wallet, err := decodeWalletUpdate(bytes)
+					if err != nil {
+						// TODO: wrap error
+						_ = msg.Nack(ctx, err)
+
+						return fmt.Errorf("decode wallet update: %w", err)
+					}
+
+					if err := l.walletUpdateUsecase.Update(ctx, wallet); err != nil {
+						// TODO: wrap error
+						_ = msg.Nack(ctx, err)
+
+						return fmt.Errorf("update: %w", err)
+					}
+
+					// TODO: wrap error
+					_ = msg.Ack(ctx)
+
+					return nil
 				},
-				Data: msg,
+				Data: msg.Payload(),
 			},
 		); err != nil {
+			// TODO: wrap error
+			_ = msg.Nack(ctx, err)
+
 			l.log.Error("task add", "reason", err)
 		}
 	}
-}
-
-func (l *EventLoop) Stop() {
-	l.stopCh <- struct{}{}
 }

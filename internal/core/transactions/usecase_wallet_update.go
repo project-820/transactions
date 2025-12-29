@@ -17,6 +17,6 @@ func NewWalletUpdate() WalletUpdate {
 	return WalletUpdate{}
 }
 
-func (w *WalletUpdate) Update(ctx context.Context, wallet Wallet) error {
+func (w *WalletUpdate) Update(ctx context.Context, wallet WalletUpdateEvent) error {
 	return nil
 }
