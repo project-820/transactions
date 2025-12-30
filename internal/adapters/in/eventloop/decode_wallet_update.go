@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/project-820/transactions/internal/core/transactions"
+	"github.com/project-820/transactions/internal/core/usecase"
 )
 
 type walletUpdate struct {
@@ -18,21 +18,21 @@ type walletUpdate struct {
 	} `json:"wallets"`
 }
 
-func decodeWalletUpdate(payload []byte) (transactions.WalletUpdateEvent, error) {
+func decodeWalletUpdate(payload []byte) (usecase.WalletUpdateEvent, error) {
 	var walletUpdate walletUpdate
 	if err := json.Unmarshal(payload, &walletUpdate); err != nil {
-		return transactions.WalletUpdateEvent{}, err
+		return usecase.WalletUpdateEvent{}, err
 	}
 
-	walletUpdateEvent := transactions.WalletUpdateEvent{
+	walletUpdateEvent := usecase.WalletUpdateEvent{
 		EventID:    walletUpdate.EventID,
 		OccurredAt: walletUpdate.OccurredAt,
 		UserID:     walletUpdate.UserID,
-		Wallets:    make([]transactions.WalletRef, 0, len(walletUpdate.Wallets)),
+		Wallets:    make([]usecase.WalletRef, 0, len(walletUpdate.Wallets)),
 	}
 
 	for _, wallet := range walletUpdate.Wallets {
-		walletUpdateEvent.Wallets = append(walletUpdateEvent.Wallets, transactions.WalletRef{
+		walletUpdateEvent.Wallets = append(walletUpdateEvent.Wallets, usecase.WalletRef{
 			Chain:   wallet.Chain,
 			Address: wallet.Address,
 			Label:   wallet.Label,

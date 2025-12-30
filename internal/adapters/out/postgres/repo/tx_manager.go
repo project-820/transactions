@@ -3,7 +3,7 @@ package postgres
 import (
 	"context"
 
-	"github.com/project-820/transactions/internal/core/ports"
+	"github.com/project-820/transactions/internal/core/usecase"
 	"github.com/uptrace/bun"
 )
 
@@ -17,7 +17,7 @@ func NewTxManager(db *bun.DB) *txManager {
 
 func (m *txManager) WithinTx(
 	ctx context.Context,
-	fn func(context.Context, ports.Repositories) error,
+	fn func(context.Context, usecase.Repositories) error,
 ) error {
 	return m.db.RunInTx(ctx, nil, func(ctx context.Context, tx bun.Tx) error {
 		repos := &repositories{tx: tx}
@@ -29,6 +29,10 @@ type repositories struct {
 	tx bun.Tx
 }
 
-func (r *repositories) Outbox() ports.OutboxRepository {
-	return NewOutboxRepository(&r.tx)
+func (r *repositories) OutboxWriter() usecase.OutboxWriter {
+	return NewOutboxWriter(&r.tx)
+}
+
+func (r *repositories) Wallet() usecase.WalletRepo {
+	return NewWalletRepositiry(&r.tx)
 }

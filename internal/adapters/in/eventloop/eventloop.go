@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/project-820/transactions/internal/core/transactions"
+	"github.com/project-820/transactions/internal/core/usecase"
 	"github.com/project-820/transactions/pkg/broker"
 	"github.com/project-820/transactions/pkg/workerpool"
 )
 
 type EventLoop struct {
 	workerPool          workerpool.WorkerPool
-	walletUpdateUsecase transactions.WalletUpdate
+	walletUpdateUsecase usecase.WalletUpdate
 	consumer            broker.Consumer
 
 	log *slog.Logger
