@@ -7,7 +7,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
-type Transaction struct {
+type WalletTransaction struct {
 	bun.BaseModel `bun:"table:transactions,alias:t"`
 
 	ID int64 `bun:"id,pk,autoincrement"`

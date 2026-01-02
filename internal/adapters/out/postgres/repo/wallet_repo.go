@@ -9,19 +9,19 @@ import (
 	"github.com/uptrace/bun"
 )
 
-var _ usecase.WalletRepo = (*wallet)(nil)
+var _ usecase.WalletRepo = (*walletRepo)(nil)
 
-type wallet struct {
+type walletRepo struct {
 	db bun.IDB
 }
 
-func NewWalletRepositiry(db bun.IDB) *wallet {
-	return &wallet{
+func NewWalletRepositiry(db bun.IDB) *walletRepo {
+	return &walletRepo{
 		db: db,
 	}
 }
 
-func (r *wallet) UpsertWallets(ctx context.Context, userID string, wallets []usecase.WalletRef) (newWalletIDs []int64, err error) {
+func (r *walletRepo) UpsertWallets(ctx context.Context, userID string, wallets []usecase.WalletRef) (newWalletIDs []int64, err error) {
 	walletModels := make([]models.Wallet, 0, len(wallets))
 	for _, wallet := range wallets {
 		walletModels = append(walletModels, models.Wallet{
@@ -44,7 +44,7 @@ func (r *wallet) UpsertWallets(ctx context.Context, userID string, wallets []use
 		Scan(ctx, &rows)
 
 	if err != nil {
-		return nil, fmt.Errorf("insert wallets: %w", err)
+		return nil, fmt.Errorf("upsert wallets: %w", err)
 	}
 
 	return nil, nil

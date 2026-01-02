@@ -33,7 +33,7 @@ func Run(ctx context.Context) error {
 		return fmt.Errorf("failed to run platform: %w", err)
 	}
 
-	eventLoop := eventloop.NewEventLoop()
+	eventLoop := eventloop.NewEventLoop(eventloop.EventLoopParams{})
 	go eventLoop.Run(ctx)
 
 	// go syncLoop.Run(ctx)

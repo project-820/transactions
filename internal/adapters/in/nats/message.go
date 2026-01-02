@@ -3,7 +3,11 @@ package nats
 import (
 	"context"
 	"time"
+
+	"github.com/project-820/transactions/pkg/broker"
 )
+
+var _ broker.Message = (*message)(nil)
 
 type message struct {
 	eventType  string

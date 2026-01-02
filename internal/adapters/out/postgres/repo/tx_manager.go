@@ -33,6 +33,10 @@ func (r *repositories) OutboxWriter() usecase.OutboxWriter {
 	return NewOutboxWriter(&r.tx)
 }
 
-func (r *repositories) Wallet() usecase.WalletRepo {
+func (r *repositories) WalletRepo() usecase.WalletRepo {
 	return NewWalletRepositiry(&r.tx)
+}
+
+func (r *repositories) WalletSyncTaskRepo() usecase.WalletSyncTaskRepo {
+	return NewWalletSyncTaskRepository(&r.tx)
 }

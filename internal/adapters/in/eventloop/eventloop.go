@@ -10,6 +10,14 @@ import (
 	"github.com/project-820/transactions/pkg/workerpool"
 )
 
+type EventLoopParams struct {
+	WorkerPool          workerpool.WorkerPool
+	WalletUpdateUsecase usecase.WalletUpdate
+	Consumer            broker.Consumer
+
+	Log *slog.Logger
+}
+
 type EventLoop struct {
 	workerPool          workerpool.WorkerPool
 	walletUpdateUsecase usecase.WalletUpdate
@@ -18,8 +26,13 @@ type EventLoop struct {
 	log *slog.Logger
 }
 
-func NewEventLoop() EventLoop {
-	return EventLoop{}
+func NewEventLoop(params EventLoopParams) EventLoop {
+	return EventLoop{
+		workerPool:          params.WorkerPool,
+		walletUpdateUsecase: params.WalletUpdateUsecase,
+		consumer:            params.Consumer,
+		log:                 params.Log,
+	}
 }
 
 func (l *EventLoop) Run(ctx context.Context) {

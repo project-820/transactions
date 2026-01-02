@@ -7,6 +7,8 @@ import (
 	"github.com/project-820/transactions/pkg/broker"
 )
 
+var _ broker.Consumer = (*jsConsumer)(nil)
+
 type jsConsumer struct {
 	log *slog.Logger
 }
