@@ -11,7 +11,7 @@ import (
 )
 
 type EventLoopParams struct {
-	WorkerPool          workerpool.WorkerPool
+	Pool                *workerpool.Pool
 	WalletUpdateUsecase usecase.WalletUpdate
 	Consumer            broker.Consumer
 
@@ -19,7 +19,7 @@ type EventLoopParams struct {
 }
 
 type EventLoop struct {
-	workerPool          workerpool.WorkerPool
+	pool                *workerpool.Pool
 	walletUpdateUsecase usecase.WalletUpdate
 	consumer            broker.Consumer
 
@@ -28,7 +28,7 @@ type EventLoop struct {
 
 func NewEventLoop(params EventLoopParams) EventLoop {
 	return EventLoop{
-		workerPool:          params.WorkerPool,
+		pool:                params.Pool,
 		walletUpdateUsecase: params.WalletUpdateUsecase,
 		consumer:            params.Consumer,
 		log:                 params.Log,
@@ -50,36 +50,32 @@ func (l *EventLoop) Run(ctx context.Context) {
 			continue
 		}
 
-		if err := l.workerPool.TaskAdd(
-			ctx,
-			workerpool.Task{
-				F: func(ctx context.Context, data any) error {
-					bytes := data.([]byte)
-					wallet, err := decodeWalletUpdate(bytes)
-					if err != nil {
-						// TODO: wrap error
-						_ = msg.Nack(ctx, err)
+		task := func(ctx context.Context) error {
+			bytes := msg.Data()
+			wallet, err := decodeWalletUpdate(bytes)
+			if err != nil {
+				// TODO: wrap error, log
+				_ = msg.Nak()
 
-						return fmt.Errorf("decode wallet update: %w", err)
-					}
+				return fmt.Errorf("decode wallet update: %w", err)
+			}
 
-					if err := l.walletUpdateUsecase.Update(ctx, wallet); err != nil {
-						// TODO: wrap error
-						_ = msg.Nack(ctx, err)
+			if err := l.walletUpdateUsecase.Update(ctx, wallet); err != nil {
+				// TODO: wrap error, log
+				_ = msg.Nak()
 
-						return fmt.Errorf("update: %w", err)
-					}
+				return fmt.Errorf("update: %w", err)
+			}
 
-					// TODO: wrap error
-					_ = msg.Ack(ctx)
+			// TODO: wrap error, log
+			_ = msg.Ack()
 
-					return nil
-				},
-				Data: msg.Payload(),
-			},
-		); err != nil {
-			// TODO: wrap error
-			_ = msg.Nack(ctx, err)
+			return nil
+		}
+
+		if err := l.pool.Submit(ctx, task); err != nil {
+			// TODO: wrap error, log
+			_ = msg.Nak()
 
 			l.log.Error("task add", "reason", err)
 		}

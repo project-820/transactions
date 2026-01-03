@@ -2,21 +2,16 @@ package broker
 
 import (
 	"context"
-	"time"
 )
+
+type Message interface {
+	Subject() string
+	Data() []byte
+	Ack() error
+	Nak() error
+}
 
 type Consumer interface {
 	Next(ctx context.Context) (Message, error)
 	Close() error
-}
-
-type Message interface {
-	EventType() string
-	Payload() []byte
-	ID() string
-	Key() string
-	OccurredAt() time.Time
-
-	Ack(ctx context.Context) error
-	Nack(ctx context.Context, reason error) error
 }

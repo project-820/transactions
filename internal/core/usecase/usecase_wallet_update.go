@@ -31,7 +31,7 @@ type WalletUpdate struct {
 	log       *slog.Logger
 }
 
-func NewWalletUpdate(params WalletUpdateParams) WalletUpdate {
+func NewWalletUpdateUsecase(params WalletUpdateParams) WalletUpdate {
 	return WalletUpdate{
 		txManager: params.TxManager,
 		log:       params.Log,

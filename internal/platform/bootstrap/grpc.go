@@ -14,11 +14,7 @@ type GRPCConfig struct {
 	ValidatePaths    map[string]bool
 }
 
-func NewGRPCServer(cfg *GRPCConfig) (*grpc.GRPC, error) {
-	if cfg == nil {
-		return nil, fmt.Errorf("grpc cfg is empty")
-	}
-
+func NewGRPCServer(cfg GRPCConfig) (*grpc.GRPC, error) {
 	if cfg.Addr == "" {
 		return nil, fmt.Errorf("grpc addr is empty")
 	}

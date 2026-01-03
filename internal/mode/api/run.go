@@ -20,7 +20,7 @@ const (
 func Run(ctx context.Context) error {
 	transactionsServer := server.NewTransactionsServer(server.ServerParams{})
 
-	grpcServer, err := bootstrap.NewGRPCServer(&bootstrap.GRPCConfig{
+	grpcServer, err := bootstrap.NewGRPCServer(bootstrap.GRPCConfig{
 		Addr:             grpcAddr,
 		ValidateMessages: transactionsServer.ValidateMessages,
 		ValidatePaths:    transactionsServer.ValidatePaths,
@@ -34,7 +34,7 @@ func Run(ctx context.Context) error {
 		Metrics:   nil, // nil => expvar
 	})
 
-	httpServer, err := bootstrap.NewHTTPServer(&bootstrap.HTTPConfig{Addr: httpAddr}, infraMux)
+	httpServer, err := bootstrap.NewHTTPServer(bootstrap.HTTPConfig{Addr: httpAddr}, infraMux)
 	if err != nil {
 		return fmt.Errorf("failed to init infra http server: %w", err)
 	}
