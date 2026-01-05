@@ -15,7 +15,7 @@ type walletRepo struct {
 	db bun.IDB
 }
 
-func NewWalletRepositiry(db bun.IDB) *walletRepo {
+func NewWalletRepository(db bun.IDB) *walletRepo {
 	return &walletRepo{
 		db: db,
 	}

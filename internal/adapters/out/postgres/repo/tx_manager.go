@@ -29,14 +29,18 @@ type repositories struct {
 	tx bun.Tx
 }
 
-func (r *repositories) OutboxWriter() usecase.OutboxWriter {
+func (r *repositories) OutboxWriterRepo() usecase.OutboxWriterRepo {
 	return NewOutboxWriter(&r.tx)
 }
 
 func (r *repositories) WalletRepo() usecase.WalletRepo {
-	return NewWalletRepositiry(&r.tx)
+	return NewWalletRepository(&r.tx)
 }
 
 func (r *repositories) WalletSyncTaskRepo() usecase.WalletSyncTaskRepo {
 	return NewWalletSyncTaskRepository(&r.tx)
+}
+
+func (r *repositories) TxRepo() usecase.TxRepo {
+	return NewTxRepository(&r.tx)
 }

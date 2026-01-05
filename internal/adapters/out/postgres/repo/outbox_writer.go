@@ -9,7 +9,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
-var _ usecase.OutboxWriter = (*outboxWriter)(nil)
+var _ usecase.OutboxWriterRepo = (*outboxWriter)(nil)
 
 type outboxWriter struct {
 	db bun.IDB

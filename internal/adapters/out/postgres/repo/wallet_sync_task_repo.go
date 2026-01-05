@@ -53,7 +53,7 @@ func (w *walletSyncTaskRepo) ClaimDue(ctx context.Context, limit int, lockTTL ti
 	return nil, nil
 }
 
-func (w *walletSyncTaskRepo) MarkDone(ctx context.Context, walletID int64, nextRunAfter time.Time) error {
+func (w *walletSyncTaskRepo) MarkDone(ctx context.Context, walletID int64, nextRunAfter time.Time, nextCursor string) error {
 	return nil
 }
 
