@@ -81,3 +81,7 @@ func (l *EventLoop) Run(ctx context.Context) {
 		}
 	}
 }
+
+func (l *EventLoop) Stop() {
+	l.pool.StopNow()
+}

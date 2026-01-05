@@ -7,6 +7,12 @@ import (
 	"time"
 )
 
+type WalletTxSyncParams struct {
+	TxManager TxManager
+	Onchain   OnchainResolver
+	Period    time.Duration
+}
+
 type WalletTxSync struct {
 	txManager TxManager
 	onchain   OnchainResolver
@@ -14,11 +20,11 @@ type WalletTxSync struct {
 	lockTTL   time.Duration
 }
 
-func NewWalletTxSync(txManager TxManager, onchain OnchainResolver, period time.Duration) *WalletTxSync {
+func NewWalletTxSyncUsecase(params WalletTxSyncParams) *WalletTxSync {
 	return &WalletTxSync{
-		txManager: txManager,
-		onchain:   onchain,
-		period:    period,
+		txManager: params.TxManager,
+		onchain:   params.Onchain,
+		period:    params.Period,
 	}
 }
 
@@ -45,12 +51,12 @@ func (t *WalletTxSync) Sync(ctx context.Context, task WalletSyncTask) error {
 	nextRun := time.Now().Add(t.period)
 
 	return t.txManager.WithinTx(ctx, func(ctx context.Context, r Repositories) error {
-		inserted, err := r.TxRepo().InsertOnchainIgnoreConflicts(ctx, task.WalletID, task.UserID, onChainTxList.Transactions)
+		insertedTxs, err := r.TxRepo().InsertOnchainIgnoreConflicts(ctx, task.WalletID, task.UserID, onChainTxList.Transactions)
 		if err != nil {
 			return err
 		}
 
-		msgs := buildTxAddedMessages(inserted)
+		msgs := buildTxAddedMessages(insertedTxs)
 
 		if len(msgs) > 0 {
 			if err := r.OutboxWriterRepo().AddMessages(ctx, msgs); err != nil {
@@ -62,6 +68,6 @@ func (t *WalletTxSync) Sync(ctx context.Context, task WalletSyncTask) error {
 	})
 }
 
-func buildTxAddedMessages(insertedTx []InsertedTx) []OutboxMessage {
+func buildTxAddedMessages(insertedTxs []InsertedTx) []OutboxMessage {
 	return nil
 }

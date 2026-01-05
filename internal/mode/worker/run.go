@@ -4,9 +4,14 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/project-820/transactions/internal/adapters/in/eventloop"
+	"github.com/project-820/transactions/internal/adapters/in/syncloop"
 	"github.com/project-820/transactions/internal/adapters/out/natsjs"
+	"github.com/project-820/transactions/internal/adapters/out/onchain"
+	"github.com/project-820/transactions/internal/adapters/out/onchain/evm"
+	"github.com/project-820/transactions/internal/adapters/out/onchain/httpx"
 	"github.com/project-820/transactions/internal/adapters/out/postgres"
 	"github.com/project-820/transactions/internal/adapters/out/postgres/repo"
 	"github.com/project-820/transactions/internal/config"
@@ -63,14 +68,13 @@ func Run(ctx context.Context) error {
 	}
 
 	txManager := repo.NewTxManager(db)
-	pool := workerpool.NewPool(workerpool.Options{
-		Workers:   cfg.Worker.Pool.Workers,
-		QueueSize: cfg.Worker.Pool.QueueSize,
-		OnPanic:   nil,
-	})
 
 	eventLoop := eventloop.NewEventLoop(eventloop.EventLoopParams{
-		Pool: pool,
+		Pool: workerpool.NewPool(workerpool.Options{
+			Workers:   cfg.Worker.Pool.Workers,
+			QueueSize: cfg.Worker.Pool.QueueSize,
+			OnPanic:   nil,
+		}),
 		WalletUpdateUsecase: usecase.NewWalletUpdateUsecase(
 			usecase.WalletUpdateParams{
 				TxManager: txManager,
@@ -82,7 +86,24 @@ func Run(ctx context.Context) error {
 	})
 	go eventLoop.Run(ctx)
 
-	// go syncLoop.Run(ctx)
+	syncLoop := syncloop.NewSyncLoop(syncloop.SyncLoopParams{
+		Pool: workerpool.NewPool(workerpool.Options{
+			Workers:   cfg.Worker.Pool.Workers,
+			QueueSize: cfg.Worker.Pool.QueueSize,
+			OnPanic:   nil,
+		}),
+		WalletTxSyncUsecase: *usecase.NewWalletTxSyncUsecase(
+			usecase.WalletTxSyncParams{
+				TxManager: txManager,
+				Onchain: onchain.NewRegistry(evm.NewEVMClient(evm.ClientParams{
+					RPCUrl:          "",
+					Doer:            httpx.NewDefaultClient(time.Second * 5),
+					MaxBlocksPerRun: 0,
+				})),
+			},
+		),
+	})
+	go syncLoop.Run(ctx)
 
 	infraMux := infra.NewMux(infra.Params{
 		Readiness: nil, // позже: readiness воркера, db, nats
@@ -104,7 +125,9 @@ func Run(ctx context.Context) error {
 
 	<-ctx.Done()
 	slog.Info("stop signal received")
-	pool.StopNow()
+	eventLoop.Stop()
+	syncLoop.Stop()
+
 	_ = consumer.Close()
 	jsClient.Close()
 

@@ -6,10 +6,6 @@ import (
 	"time"
 )
 
-type OnchainClient interface {
-	ListTransactions(ctx context.Context, req OnchainTxListRequest) (OnchainTxListResult, error)
-}
-
 type OnchainTxListRequest struct {
 	Chain   string
 	Address string
@@ -38,6 +34,10 @@ type OnchainTx struct {
 	FeeQty      string
 
 	Meta []byte
+}
+
+type OnchainClient interface {
+	ListTransactions(ctx context.Context, req OnchainTxListRequest) (OnchainTxListResult, error)
 }
 
 type OnchainResolver interface {
