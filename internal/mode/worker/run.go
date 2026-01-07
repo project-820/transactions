@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/nats-io/nats.go/jetstream"
 	"github.com/project-820/transactions/internal/adapters/in/eventloop"
 	"github.com/project-820/transactions/internal/adapters/in/syncloop"
 	"github.com/project-820/transactions/internal/adapters/out/natsjs"
@@ -50,7 +51,18 @@ func Run(ctx context.Context) error {
 		return fmt.Errorf("create natsjs client: %w", err)
 	}
 
-	consumer, err := jsClient.NewConsumer(ctx, cfg.Worker.Stream.StreamName,
+	stream, err := jsClient.NewStream(ctx, jetstream.StreamConfig{
+		Name:       cfg.Worker.Stream.StreamName,
+		Subjects:   []string{cfg.Worker.Stream.Subject},
+		Retention:  cfg.Worker.Stream.RetentionPolicy,
+		Replicas:   cfg.Worker.Stream.Replicas,
+		Duplicates: cfg.Worker.Stream.Duplicates,
+	})
+	if err != nil {
+		return fmt.Errorf("new stream %q: %w", cfg.Worker.Stream.StreamName, err)
+	}
+
+	consumer, err := jsClient.NewConsumer(ctx, stream,
 		natsjs.ConsumerOptions{
 			FilterSubject: cfg.Worker.Consumer.Subject,
 			Name:          cfg.Worker.Consumer.Name,
@@ -62,12 +74,31 @@ func Run(ctx context.Context) error {
 		return fmt.Errorf("create nats consumer: %w", err)
 	}
 
-	db, err := postgres.NewPostgresDB(ctx, postgres.PostgresParams{})
+	db, err := postgres.NewPostgresDB(ctx, postgres.PostgresParams{DSN: cfg.Common.Postgres.DSN})
 	if err != nil {
 		return fmt.Errorf("create postgres db: %w", err)
 	}
 
 	txManager := repo.NewTxManager(db)
+
+	syncLoop := syncloop.NewSyncLoop(syncloop.SyncLoopParams{
+		Pool: workerpool.NewPool(workerpool.Options{
+			Workers:   cfg.Worker.Pool.Workers,
+			QueueSize: cfg.Worker.Pool.QueueSize,
+			OnPanic:   nil,
+		}),
+		WalletTxSyncUsecase: usecase.NewWalletTxSyncUsecase(
+			usecase.WalletTxSyncParams{
+				TxManager: txManager,
+				Onchain: onchain.NewRegistry(evm.NewEVMClient(evm.ClientParams{
+					RPCUrl:          cfg.Worker.Chain.EVM.RPCURL,
+					Doer:            httpx.NewDefaultClient(time.Second * 5),
+					MaxBlocksPerRun: uint64(cfg.Worker.Chain.EVM.MaxBlocksPerRun),
+				})),
+			},
+		),
+	})
+	go syncLoop.Run(ctx)
 
 	eventLoop := eventloop.NewEventLoop(eventloop.EventLoopParams{
 		Pool: workerpool.NewPool(workerpool.Options{
@@ -85,25 +116,6 @@ func Run(ctx context.Context) error {
 		Log:      nil,
 	})
 	go eventLoop.Run(ctx)
-
-	syncLoop := syncloop.NewSyncLoop(syncloop.SyncLoopParams{
-		Pool: workerpool.NewPool(workerpool.Options{
-			Workers:   cfg.Worker.Pool.Workers,
-			QueueSize: cfg.Worker.Pool.QueueSize,
-			OnPanic:   nil,
-		}),
-		WalletTxSyncUsecase: *usecase.NewWalletTxSyncUsecase(
-			usecase.WalletTxSyncParams{
-				TxManager: txManager,
-				Onchain: onchain.NewRegistry(evm.NewEVMClient(evm.ClientParams{
-					RPCUrl:          cfg.Worker.Chain.EVM.RPCURL,
-					Doer:            httpx.NewDefaultClient(time.Second * 5),
-					MaxBlocksPerRun: uint64(cfg.Worker.Chain.EVM.MaxBlocksPerRun),
-				})),
-			},
-		),
-	})
-	go syncLoop.Run(ctx)
 
 	infraMux := infra.NewMux(infra.Params{
 		Readiness: nil, // позже: readiness воркера, db, nats

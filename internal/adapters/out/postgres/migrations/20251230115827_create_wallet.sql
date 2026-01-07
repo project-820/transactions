@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS wallets (
     status      SMALLINT NOT NULL DEFAULT 1, -- 1=active, 2=disabled
 
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- +goose StatementEnd

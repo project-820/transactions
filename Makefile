@@ -3,7 +3,7 @@ include .env
 endif
 
 GOOSE_DRIVER := postgres
-GOOSE_DIR    := $(CURDIR)/internal/adapters/db/postgres/migrations
+GOOSE_DIR    := $(CURDIR)/internal/adapters/out/postgres/migrations
 
 NAMESPACE := project820
 SERVICE := transactions-service

@@ -14,22 +14,22 @@ type WalletTxSyncParams struct {
 }
 
 type WalletTxSync struct {
-	txManager TxManager
-	onchain   OnchainResolver
-	period    time.Duration
-	lockTTL   time.Duration
+	txManager       TxManager
+	onchainResolver OnchainResolver
+	period          time.Duration
+	lockTTL         time.Duration
 }
 
-func NewWalletTxSyncUsecase(params WalletTxSyncParams) *WalletTxSync {
-	return &WalletTxSync{
-		txManager: params.TxManager,
-		onchain:   params.Onchain,
-		period:    params.Period,
+func NewWalletTxSyncUsecase(params WalletTxSyncParams) WalletTxSync {
+	return WalletTxSync{
+		txManager:       params.TxManager,
+		onchainResolver: params.Onchain,
+		period:          params.Period,
 	}
 }
 
 func (t *WalletTxSync) Sync(ctx context.Context, task WalletSyncTask) error {
-	client, ok := t.onchain.ForChain(task.Chain)
+	client, ok := t.onchainResolver.ForChain(task.Chain)
 	if !ok {
 		return fmt.Errorf("no onchain client for chain=%s", task.Chain)
 	}

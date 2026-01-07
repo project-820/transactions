@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS transactions (
 
     meta           JSONB NULL,
 
-    created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- +goose StatementEnd

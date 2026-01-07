@@ -187,7 +187,7 @@ func LoadFromEnv() (Config, error) {
 	}
 
 	var err error
-	cfg.Worker.Stream.RetentionPolicy, err = parseRetentionPolicy(getEnv(EnvWorkerStreamRetention, "limits"))
+	cfg.Worker.Stream.RetentionPolicy, err = parseRetentionPolicy(getEnv(EnvWorkerStreamRetention, "workqueue"))
 	if err != nil {
 		return Config{}, fmt.Errorf("%s: %w", EnvWorkerStreamRetention, err)
 	}

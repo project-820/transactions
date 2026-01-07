@@ -31,7 +31,7 @@ type jsConsumer struct {
 	maxWait  time.Duration
 }
 
-func (c *Client) NewConsumer(ctx context.Context, streamName string, opts ConsumerOptions) (broker.Consumer, error) {
+func (c *Client) NewConsumer(ctx context.Context, stream jetstream.Stream, opts ConsumerOptions) (broker.Consumer, error) {
 	if opts.FetchMaxWait <= 0 {
 		opts.FetchMaxWait = 5 * time.Second
 	}
@@ -42,11 +42,6 @@ func (c *Client) NewConsumer(ctx context.Context, streamName string, opts Consum
 
 	if opts.FilterSubject == "" {
 		return nil, errors.New("consumer filter subject is required")
-	}
-
-	stream, err := c.js.Stream(ctx, streamName)
-	if err != nil {
-		return nil, fmt.Errorf("get stream %q: %w", streamName, err)
 	}
 
 	consumer, err := stream.CreateOrUpdateConsumer(ctx, jetstream.ConsumerConfig{
