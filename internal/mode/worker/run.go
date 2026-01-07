@@ -96,9 +96,9 @@ func Run(ctx context.Context) error {
 			usecase.WalletTxSyncParams{
 				TxManager: txManager,
 				Onchain: onchain.NewRegistry(evm.NewEVMClient(evm.ClientParams{
-					RPCUrl:          "",
+					RPCUrl:          cfg.Worker.Chain.EVM.RPCURL,
 					Doer:            httpx.NewDefaultClient(time.Second * 5),
-					MaxBlocksPerRun: 0,
+					MaxBlocksPerRun: uint64(cfg.Worker.Chain.EVM.MaxBlocksPerRun),
 				})),
 			},
 		),

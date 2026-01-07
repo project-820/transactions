@@ -49,5 +49,6 @@ func CallRPC(ctx context.Context, d Doer, url string, id int64, method string, p
 	if out == nil {
 		return nil
 	}
+
 	return json.Unmarshal(resp.Result, out)
 }

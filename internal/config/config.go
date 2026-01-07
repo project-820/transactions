@@ -12,6 +12,11 @@ import (
 )
 
 const (
+	EnvEVMRPCUrl       = "EVM_RPC_URL"
+	EnvMaxBlocksPerRun = "MAX_BLOCKS_PER_RUN"
+)
+
+const (
 	EnvPGDSN = "PG_DSN"
 
 	EnvJSHost                   = "JS_HOST"
@@ -68,6 +73,7 @@ type WorkerConfig struct {
 	Pool     PoolConfig
 	Stream   StreamConfig
 	Consumer ConsumerConfig
+	Chain    ChainConfig
 
 	SyncTick   time.Duration
 	ClaimLimit int
@@ -89,6 +95,15 @@ type JetStreamConfig struct {
 type PoolConfig struct {
 	Workers   int
 	QueueSize int
+}
+
+type ChainConfig struct {
+	EVM EVMConfig
+}
+
+type EVMConfig struct {
+	RPCURL          string
+	MaxBlocksPerRun int
 }
 
 type StreamConfig struct {
@@ -147,6 +162,13 @@ func LoadFromEnv() (Config, error) {
 			Pool: PoolConfig{
 				Workers:   getEnvInt(EnvWorkerPoolSize, runtime.NumCPU()),
 				QueueSize: getEnvInt(EnvWorkerPoolQueueSize, runtime.NumCPU()),
+			},
+
+			Chain: ChainConfig{
+				EVM: EVMConfig{
+					RPCURL:          getEnv(EnvEVMRPCUrl, ""),
+					MaxBlocksPerRun: getEnvInt(EnvMaxBlocksPerRun, 1000),
+				},
 			},
 
 			Stream: StreamConfig{
@@ -230,6 +252,14 @@ func (c Config) ValidateWorker() error {
 	if c.Worker.Stream.Replicas <= 0 {
 		return fmt.Errorf("%s must be > 0", EnvWorkerStreamReplicas)
 	}
+
+	if c.Worker.Chain.EVM.RPCURL == "" {
+		return fmt.Errorf("%s is required", EnvEVMRPCUrl)
+	}
+	if c.Worker.Chain.EVM.MaxBlocksPerRun < 1 {
+		return fmt.Errorf("%s must be > 0", EnvMaxBlocksPerRun)
+	}
+
 	return nil
 }
 

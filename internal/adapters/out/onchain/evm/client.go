@@ -67,7 +67,11 @@ func (c *Client) ListTransactions(
 	from := last + 1
 	to := latest
 	if from > to {
-		return usecase.OnchainTxListResult{NextCursor: fmt.Sprintf("%d", last), HasMore: false}, nil
+		return usecase.OnchainTxListResult{
+			Transactions: nil,
+			NextCursor:   fmt.Sprintf("%d", last),
+			HasMore:      false,
+		}, nil
 	}
 
 	if to-from+1 > c.maxBlocksPerRun {
@@ -87,6 +91,7 @@ func (c *Client) ListTransactions(
 	seen := make(map[string]struct{}, len(logsIn)+len(logsOut))
 	out := make([]usecase.OnchainTx, 0, len(logsIn)+len(logsOut))
 
+	// TODO
 	// Время: без дополнительного запроса к блоку будет неизвестно.
 	// Для MVP можно оставить OccurredAt=0 и восстановить позже.
 	// Если тебе обязательно — добавишь кеш blockTimestampByNumber + eth_getBlockByNumber.
@@ -141,41 +146,46 @@ func (c *Client) getTransferLogs(ctx context.Context, fromBlock, toBlock uint64,
 		"toBlock":   fmt.Sprintf("0x%x", toBlock),
 		"topics":    buildTopics(fromAddr, toAddr),
 	}
+
 	var logs []rpcLog
 	if err := httpx.CallRPC(ctx, c.doer, c.rpcURL, 2, "eth_getLogs", []any{filter}, &logs); err != nil {
 		return nil, err
 	}
+
 	return logs, nil
 }
 
-// topics: [transferSig, from, to]
 func buildTopics(fromAddr, toAddr string) []any {
 	topics := make([]any, 3)
 	topics[0] = transferTopic0
+
 	if fromAddr != "" {
 		topics[1] = evmTopicAddress(fromAddr)
 	}
 	if toAddr != "" {
 		topics[2] = evmTopicAddress(toAddr)
 	}
+
 	return topics
 }
 
-// address must be 0x + 40 hex
 func evmTopicAddress(addr string) string {
 	a := strings.TrimPrefix(strings.ToLower(addr), "0x")
-	return "0x" + strings.Repeat("0", 24*2) + a
+	return "0x" + strings.Repeat("0", 24) + a
 }
 
-func normalizeEVMAddress(a string) string {
-	s := strings.ToLower(strings.TrimSpace(a))
-	if strings.HasPrefix(s, "0x") && len(s) == 42 {
-		_, err := hex.DecodeString(s[2:])
-		if err == nil {
-			return s
-		}
+func normalizeEVMAddress(address string) string {
+	str := strings.ToLower(strings.TrimSpace(address))
+
+	if !strings.HasPrefix(str, "0x") || len(str) != 42 {
+		return ""
 	}
-	return ""
+
+	if _, err := hex.DecodeString(str[2:]); err != nil {
+		return ""
+	}
+
+	return str
 }
 
 func mustHexToUint(hexStr string) uint64 {
