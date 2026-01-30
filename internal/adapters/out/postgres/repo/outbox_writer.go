@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/project-820/transactions/internal/adapters/out/postgres/models"
 	"github.com/project-820/transactions/internal/core/usecase"
 
 	"github.com/uptrace/bun"
@@ -22,8 +23,18 @@ func NewOutboxWriter(db bun.IDB) *outboxWriter {
 }
 
 func (r *outboxWriter) AddMessages(ctx context.Context, msgs []usecase.OutboxMessage) error {
+	modelMsgs := make([]models.OutboxMessage, 0, len(msgs))
+	for _, msg := range msgs {
+		modelMsgs = append(modelMsgs, models.OutboxMessage{
+			Subject:   msg.Subject,
+			EventName: msg.EventName,
+			Key:       msg.Key,
+			Payload:   msg.Payload,
+		})
+	}
+
 	_, err := r.db.NewInsert().
-		Model(&msgs).
+		Model(&modelMsgs).
 		Exec(ctx)
 
 	if err != nil {

@@ -36,6 +36,8 @@ func NewEventLoop(params EventLoopParams) EventLoop {
 }
 
 func (l *EventLoop) Run(ctx context.Context) {
+	l.pool.Start(ctx)
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -50,34 +52,64 @@ func (l *EventLoop) Run(ctx context.Context) {
 			continue
 		}
 
+		subject := msg.Subject()
+
 		task := func(ctx context.Context) error {
 			bytes := msg.Data()
 			wallet, err := decodeWalletUpdate(bytes)
 			if err != nil {
-				// TODO: wrap error, log
-				_ = msg.Nak()
+				l.log.Error("decode wallet update failed",
+					"subject", subject,
+					"err", err,
+				)
+
+				if err := msg.Term(); err != nil {
+					l.log.Error("msg term failed", "subject", subject, "err", err)
+				}
 
 				return fmt.Errorf("decode wallet update: %w", err)
 			}
 
 			if err := l.walletUpdateUsecase.Update(ctx, wallet); err != nil {
-				// TODO: wrap error, log
-				_ = msg.Nak()
+				l.log.Error("wallet update usecase failed",
+					"subject", subject,
+					"user_id", wallet.UserID,
+					"wallets_n", len(wallet.Wallets),
+					"err", err,
+				)
 
-				return fmt.Errorf("update: %w", err)
+				if err := msg.Nak(); err != nil {
+					l.log.Error("msg nak failed", "subject", subject, "err", err)
+				}
+
+				return fmt.Errorf("wallet update: %w", err)
 			}
 
-			// TODO: wrap error, log
-			_ = msg.Ack()
+			// if ackErr := msg.Ack(); ackErr != nil {
+			// 	l.log.Error("msg ack failed",
+			// 		"subject", subject,
+			// 		"user_id", wallet.UserID,
+			// 		"err", ackErr,
+			// 	)
+
+			// 	return fmt.Errorf("ack: %w", ackErr)
+			// }
+
+			l.log.Info("wallet update processed",
+				"subject", subject,
+				"user_id", wallet.UserID,
+				"wallets_n", len(wallet.Wallets),
+			)
 
 			return nil
 		}
 
 		if err := l.pool.Submit(ctx, task); err != nil {
-			// TODO: wrap error, log
-			_ = msg.Nak()
+			l.log.Error("pool submit failed", "subject", subject, "err", err)
 
-			l.log.Error("task add", "reason", err)
+			if nakErr := msg.Nak(); nakErr != nil {
+				l.log.Error("msg nak failed", "subject", subject, "err", nakErr)
+			}
 		}
 	}
 }

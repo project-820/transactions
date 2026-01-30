@@ -21,7 +21,7 @@ func NewWalletRepository(db bun.IDB) *walletRepo {
 	}
 }
 
-func (r *walletRepo) UpsertWallets(ctx context.Context, userID string, wallets []usecase.WalletRef) (newWalletIDs []int64, err error) {
+func (r *walletRepo) UpsertWallets(ctx context.Context, userID string, wallets []usecase.WalletRef) ([]int64, error) {
 	walletModels := make([]models.Wallet, 0, len(wallets))
 	for _, wallet := range wallets {
 		walletModels = append(walletModels, models.Wallet{
@@ -33,19 +33,19 @@ func (r *walletRepo) UpsertWallets(ctx context.Context, userID string, wallets [
 		})
 	}
 
-	var rows []models.Wallet
-	err = r.db.NewInsert().
+	var rows []int64
+	err := r.db.NewInsert().
 		Model(&walletModels).
 		On("CONFLICT (user_id, chain, address) DO UPDATE").
 		Set("label = EXCLUDED.label").
 		Set("status = EXCLUDED.status").
 		Set("updated_at = now()").
-		Returning("id, user_id, chain, address, status").
+		Returning("id").
 		Scan(ctx, &rows)
 
 	if err != nil {
 		return nil, fmt.Errorf("upsert wallets: %w", err)
 	}
 
-	return nil, nil
+	return rows, nil
 }

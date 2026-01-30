@@ -16,7 +16,7 @@ type Wallet struct {
 	Label   string `bun:"label,nullzero"`
 
 	// 1=active, 2=disabled
-	Status int16 `bun:"status,notnull"`
+	Status int16 `bun:"status,nullzero,notnull"`
 
 	CreatedAt time.Time `bun:"created_at,notnull,default:now()"`
 	UpdatedAt time.Time `bun:"updated_at,notnull,default:now()"`

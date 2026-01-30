@@ -78,9 +78,9 @@ func NewPool(opts Options) *Pool {
 	}
 }
 
-func (p *Pool) Start(parent context.Context) {
+func (p *Pool) Start(ctx context.Context) {
 	p.startOnce.Do(func() {
-		p.ctx, p.cancel = context.WithCancel(parent)
+		p.ctx, p.cancel = context.WithCancel(ctx)
 		p.started.Store(true)
 
 		for i := 0; i < p.opts.Workers; i++ {
@@ -101,8 +101,6 @@ func (p *Pool) Submit(ctx context.Context, task Task) error {
 		return ErrClosed
 	}
 
-	p.submitted.Add(1)
-
 	select {
 	case <-ctx.Done():
 		p.dropped.Add(1)
@@ -111,6 +109,7 @@ func (p *Pool) Submit(ctx context.Context, task Task) error {
 		p.dropped.Add(1)
 		return ErrClosed
 	case p.tasks <- task:
+		p.submitted.Add(1)
 		return nil
 	}
 }

@@ -99,4 +99,5 @@ type jsMessage struct {
 func (m jsMessage) Subject() string { return m.msg.Subject() }
 func (m jsMessage) Data() []byte    { return m.msg.Data() }
 func (m jsMessage) Ack() error      { return m.msg.Ack() }
+func (m jsMessage) Term() error     { return m.msg.Term() }
 func (m jsMessage) Nak() error      { return m.msg.Nak() }

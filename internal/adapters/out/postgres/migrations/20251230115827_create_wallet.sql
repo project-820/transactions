@@ -11,8 +11,11 @@ CREATE TABLE IF NOT EXISTS wallets (
     status      SMALLINT NOT NULL DEFAULT 1, -- 1=active, 2=disabled
 
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    
+    CONSTRAINT wallets_user_chain_address_uk UNIQUE (user_id, chain, address)
 );
+
 
 -- +goose StatementEnd
 

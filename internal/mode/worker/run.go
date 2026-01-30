@@ -100,6 +100,8 @@ func Run(ctx context.Context) error {
 	})
 	go syncLoop.Run(ctx)
 
+	logger := slog.Default()
+
 	eventLoop := eventloop.NewEventLoop(eventloop.EventLoopParams{
 		Pool: workerpool.NewPool(workerpool.Options{
 			Workers:   cfg.Worker.Pool.Workers,
@@ -109,11 +111,11 @@ func Run(ctx context.Context) error {
 		WalletUpdateUsecase: usecase.NewWalletUpdateUsecase(
 			usecase.WalletUpdateParams{
 				TxManager: txManager,
-				Log:       nil,
+				Log:       logger,
 			},
 		),
 		Consumer: consumer,
-		Log:      nil,
+		Log:      logger,
 	})
 	go eventLoop.Run(ctx)
 

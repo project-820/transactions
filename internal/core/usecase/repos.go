@@ -6,12 +6,12 @@ import (
 )
 
 type InsertedTx struct {
-	TxID       int64
-	WalletID   int64
-	UserID     string
-	AssetRef   string
-	Qty        string
-	OccurredAt time.Time
+	TxID       int64     `json:"tx_id"`
+	WalletID   int64     `json:"wallet_id"`
+	UserID     string    `json:"user_id"`
+	AssetRef   string    `json:"asset_ref"`
+	Qty        string    `json:"qty"`
+	OccurredAt time.Time `json:"occurred_at"`
 }
 
 type TxRepo interface {

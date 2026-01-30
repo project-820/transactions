@@ -8,6 +8,7 @@ type Message interface {
 	Subject() string
 	Data() []byte
 	Ack() error
+	Term() error
 	Nak() error
 }
 
